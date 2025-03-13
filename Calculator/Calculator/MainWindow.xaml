@@ -5,8 +5,196 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Calculator"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="Calculator" Height="550" Width="400"
+        ResizeMode="NoResize"
+        KeyDown="Window_KeyDown">
+    <Window.Resources>
+        <local:DigitGroupingConverter x:Key="DigitGroupingConverter"/>
+        <Style x:Key="NumberButtonStyle" TargetType="Button">
+            <Setter Property="Margin" Value="2"/>
+            <Setter Property="Background" Value="#E0E0E0"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style x:Key="OperatorButtonStyle" TargetType="Button">
+            <Setter Property="Margin" Value="2"/>
+            <Setter Property="Background" Value="#F0F0F0"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style x:Key="MemoryButtonStyle" TargetType="Button">
+            <Setter Property="Margin" Value="2"/>
+            <Setter Property="Background" Value="#F8F8F8"/>
+            <Setter Property="FontSize" Value="14"/>
+        </Style>
+        <Style x:Key="ClearButtonStyle" TargetType="Button">
+            <Setter Property="Margin" Value="2"/>
+            <Setter Property="Background" Value="#FFD0D0"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style x:Key="EqualsButtonStyle" TargetType="Button">
+            <Setter Property="Margin" Value="2"/>
+            <Setter Property="Background" Value="#90CAF9"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+    </Window.Resources>
 
-    </Grid>
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Header="_Cut" Click="CutMenuItem_Click" InputGestureText="Ctrl+X"/>
+                <MenuItem Header="_Copy" Click="CopyMenuItem_Click" InputGestureText="Ctrl+C"/>
+                <MenuItem Header="_Paste" Click="PasteMenuItem_Click" InputGestureText="Ctrl+V"/>
+                <Separator/>
+                <MenuItem Header="_Digit Grouping" IsCheckable="True" x:Name="DigitGroupingMenuItem" 
+                          Checked="DigitGroupingMenuItem_Checked" Unchecked="DigitGroupingMenuItem_Unchecked"/>
+                <Separator/>
+                <MenuItem Header="Use _Operator Precedence" IsCheckable="True" x:Name="OperatorPrecedenceMenuItem" 
+                          Checked="OperatorPrecedenceMenuItem_Checked" Unchecked="OperatorPrecedenceMenuItem_Unchecked"/>
+                <Separator/>
+                <MenuItem Header="E_xit" Click="ExitMenuItem_Click"/>
+            </MenuItem>
+            <MenuItem Header="_View">
+                <MenuItem Header="_Standard" Click="StandardMenuItem_Click" x:Name="StandardMenuItem" IsCheckable="True"/>
+                <MenuItem Header="_Programmer" Click="ProgrammerMenuItem_Click" x:Name="ProgrammerMenuItem" IsCheckable="True"/>
+            </MenuItem>
+            <MenuItem Header="_Help">
+                <MenuItem Header="_About" Click="AboutMenuItem_Click"/>
+            </MenuItem>
+        </Menu>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Display area -->
+            <TextBlock x:Name="DisplayTextBlock" Grid.Row="0" Height="60" Margin="10"
+                       FontSize="32" TextAlignment="Right" Text="{Binding DisplayText, Converter={StaticResource DigitGroupingConverter}}"/>
+
+            <!-- Secondary display for Programmer mode -->
+            <StackPanel x:Name="ProgrammerPanel" Grid.Row="1" Visibility="Collapsed">
+                <Grid Margin="10,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="50"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <RadioButton Grid.Row="0" Grid.Column="0" Content="HEX" GroupName="BaseSelector" 
+                                 Click="HexBaseButton_Click" x:Name="HexRadioButton"/>
+                    <TextBlock Grid.Row="0" Grid.Column="1" x:Name="HexDisplayTextBlock" TextAlignment="Right"/>
+
+                    <RadioButton Grid.Row="1" Grid.Column="0" Content="DEC" GroupName="BaseSelector" 
+                                 Click="DecBaseButton_Click" x:Name="DecRadioButton" IsChecked="True"/>
+                    <TextBlock Grid.Row="1" Grid.Column="1" x:Name="DecDisplayTextBlock" TextAlignment="Right"/>
+
+                    <RadioButton Grid.Row="2" Grid.Column="0" Content="OCT" GroupName="BaseSelector" 
+                                 Click="OctBaseButton_Click" x:Name="OctRadioButton"/>
+                    <TextBlock Grid.Row="2" Grid.Column="1" x:Name="OctDisplayTextBlock" TextAlignment="Right"/>
+
+                    <RadioButton Grid.Row="3" Grid.Column="0" Content="BIN" GroupName="BaseSelector" 
+                                 Click="BinBaseButton_Click" x:Name="BinRadioButton"/>
+                    <TextBlock Grid.Row="3" Grid.Column="1" x:Name="BinDisplayTextBlock" TextAlignment="Right"/>
+                </Grid>
+                <Separator Margin="0,5"/>
+            </StackPanel>
+
+            <!-- Calculator buttons -->
+            <Grid Grid.Row="2" Margin="10">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Memory buttons -->
+                <Button Grid.Row="0" Grid.Column="0" Content="MC" Style="{StaticResource MemoryButtonStyle}" Click="MemoryClear_Click"/>
+                <Button Grid.Row="0" Grid.Column="1" Content="MR" Style="{StaticResource MemoryButtonStyle}" Click="MemoryRecall_Click"/>
+                <Button Grid.Row="0" Grid.Column="2" Content="MS" Style="{StaticResource MemoryButtonStyle}" Click="MemoryStore_Click"/>
+                <Button Grid.Row="0" Grid.Column="3" Content="M+" Style="{StaticResource MemoryButtonStyle}" Click="MemoryAdd_Click"/>
+                <Button Grid.Row="0" Grid.Column="4" Content="M-" Style="{StaticResource MemoryButtonStyle}" Click="MemorySubtract_Click"/>
+
+                <!-- Row 1 -->
+                <Button Grid.Row="1" Grid.Column="0" Content="%" Style="{StaticResource OperatorButtonStyle}" Click="PercentButton_Click"/>
+                <Button Grid.Row="1" Grid.Column="1" Content="CE" Style="{StaticResource ClearButtonStyle}" Click="ClearEntry_Click"/>
+                <Button Grid.Row="1" Grid.Column="2" Content="C" Style="{StaticResource ClearButtonStyle}" Click="Clear_Click"/>
+                <Button Grid.Row="1" Grid.Column="3" Content="⌫" Style="{StaticResource ClearButtonStyle}" Click="Backspace_Click"/>
+                <Button Grid.Row="1" Grid.Column="4" Content="M↗" Style="{StaticResource MemoryButtonStyle}" Click="MemoryList_Click"/>
+
+                <!-- Row 2 -->
+                <Button Grid.Row="2" Grid.Column="0" Content="¹/x" Style="{StaticResource OperatorButtonStyle}" Click="Reciprocal_Click"/>
+                <Button Grid.Row="2" Grid.Column="1" Content="x²" Style="{StaticResource OperatorButtonStyle}" Click="Square_Click"/>
+                <Button Grid.Row="2" Grid.Column="2" Content="√" Style="{StaticResource OperatorButtonStyle}" Click="SquareRoot_Click"/>
+                <Button Grid.Row="2" Grid.Column="3" Content="÷" Style="{StaticResource OperatorButtonStyle}" Click="Division_Click"/>
+
+                <!-- Row 3 -->
+                <Button Grid.Row="3" Grid.Column="0" Content="7" Style="{StaticResource NumberButtonStyle}" Click="NumberButton_Click"/>
+                <Button Grid.Row="3" Grid.Column="1" Content="8" Style="{StaticResource NumberButtonStyle}" Click="NumberButton_Click"/>
+                <Button Grid.Row="3" Grid.Column="2" Content="9" Style="{StaticResource NumberButtonStyle}" Click="NumberButton_Click"/>
+                <Button Grid.Row="3" Grid.Column="3" Content="×" Style="{StaticResource OperatorButtonStyle}" Click="Multiplication_Click"/>
+                
+                <!-- coloana separata pentru A B C D E F -->
+                <!-- Hex characters for programmer mode -->
+                <StackPanel x:Name="HexPanel" Grid.Row="2" Grid.Column="4" Grid.RowSpan="4" Visibility="Collapsed">
+                    <Button Content="A" Style="{StaticResource NumberButtonStyle}" Margin="2" Click="HexButton_Click"/>
+                    <Button Content="B" Style="{StaticResource NumberButtonStyle}" Margin="2" Click="HexButton_Click"/>
+                    <Button Content="C" Style="{StaticResource NumberButtonStyle}" Margin="2" Click="HexButton_Click"/>
+                    <Button Content="D" Style="{StaticResource NumberButtonStyle}" Margin="2" Click="HexButton_Click"/>
+                    <Button Content="E" Style="{StaticResource NumberButtonStyle}" Margin="2" Click="HexButton_Click"/>
+                    <Button Content="F" Style="{StaticResource NumberButtonStyle}" Margin="2" Click="HexButton_Click"/>
+                </StackPanel>
+
+                <!-- Row 4 -->
+                <Button Grid.Row="4" Grid.Column="0" Content="4" Style="{StaticResource NumberButtonStyle}" Click="NumberButton_Click"/>
+                <Button Grid.Row="4" Grid.Column="1" Content="5" Style="{StaticResource NumberButtonStyle}" Click="NumberButton_Click"/>
+                <Button Grid.Row="4" Grid.Column="2" Content="6" Style="{StaticResource NumberButtonStyle}" Click="NumberButton_Click"/>
+                <Button Grid.Row="4" Grid.Column="3" Content="-" Style="{StaticResource OperatorButtonStyle}" Click="Subtraction_Click"/>
+
+                <!-- Row 5 -->
+                <Button Grid.Row="5" Grid.Column="0" Content="1" Style="{StaticResource NumberButtonStyle}" Click="NumberButton_Click"/>
+                <Button Grid.Row="5" Grid.Column="1" Content="2" Style="{StaticResource NumberButtonStyle}" Click="NumberButton_Click"/>
+                <Button Grid.Row="5" Grid.Column="2" Content="3" Style="{StaticResource NumberButtonStyle}" Click="NumberButton_Click"/>
+                <Button Grid.Row="5" Grid.Column="3" Content="+" Style="{StaticResource OperatorButtonStyle}" Click="Addition_Click"/>
+
+                <!-- Row 6 -->
+                <Button Grid.Row="6" Grid.Column="0" Content="+/-" Style="{StaticResource NumberButtonStyle}" Click="PlusMinus_Click"/>
+                <Button Grid.Row="6" Grid.Column="1" Content="0" Style="{StaticResource NumberButtonStyle}" Click="NumberButton_Click"/>
+                <Button Grid.Row="6" Grid.Column="2" Content="." Style="{StaticResource NumberButtonStyle}" Click="Decimal_Click"/>
+                <Button Grid.Row="6" Grid.Column="3" Grid.ColumnSpan="2" Content="=" Style="{StaticResource EqualsButtonStyle}" Click="Equals_Click"/>
+
+                <!-- Memory List Popup -->
+                <Popup x:Name="MemoryPopup" StaysOpen="False" Placement="Right">
+                    <Border BorderBrush="Gray" BorderThickness="1" Background="White" Padding="10">
+                        <StackPanel>
+                            <TextBlock Text="Memory Values" FontWeight="Bold" Margin="0,0,0,5"/>
+                            <ListBox x:Name="MemoryListBox" Width="150" Height="200" 
+                                     SelectionChanged="MemoryListBox_SelectionChanged"/>
+                            <Button Content="Clear Memory" Margin="0,5,0,0" Click="ClearMemory_Click"/>
+                        </StackPanel>
+                    </Border>
+                </Popup>
+            </Grid>
+        </Grid>
+    </DockPanel>
 </Window>
